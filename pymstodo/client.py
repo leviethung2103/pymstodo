@@ -205,7 +205,17 @@ class Task:
     def due_date(self) -> datetime | None:
         '''The date and time in the specified time zone that the task is to be finished'''
         if self.dueDateTime:
-            return datetime.fromisoformat(self.dueDateTime['dateTime']).astimezone(ZoneInfo(get_zoneinfo_name_by_windows_zone(self.dueDateTime['timeZone'])))
+            # Truncate fractional seconds to 6 digits if they exist
+            iso_string = self.dueDateTime['dateTime']
+            if '.' in iso_string:
+                date_part, frac_part = iso_string.split('.', 1)
+                if len(frac_part) > 6:
+                    frac_part = frac_part[:6]  # Keep only the first 6 digits
+                iso_string = f"{date_part}.{frac_part}"
+
+            return datetime.fromisoformat(iso_string).astimezone(
+                ZoneInfo(get_zoneinfo_name_by_windows_zone(self.dueDateTime['timeZone']))
+            )
         return None
 
     @property
